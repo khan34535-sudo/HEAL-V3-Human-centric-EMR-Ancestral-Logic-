@@ -3,13 +3,14 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-  <title>Evolutionary HEAL-V3 | Familial History · Precision Prevention</title>
+  <title>Evolutionary HEAL-V3 | Circle of Care · Collaborative CDSS</title>
   <style>
     /* ============================================
        TELUS HEALTH DESIGN SYSTEM + ACCESSIBILITY
        Psychological rationale: High contrast reduces cognitive load.
        Fitts's Law: Search bar centered, large tap targets.
        Zeigarnik Effect: SOAP icons remain incomplete → prompts completion.
+       Circle of Care: Interdisciplinary collaboration hub (MD, ND, NP, PharmD).
        Familial History: Optional, patient-led, trauma-informed disclosure.
     ============================================ */
     * {
@@ -31,6 +32,7 @@
       --telus-white: #FFFFFF;
       --telus-green: #2B8000;
       --telus-purple: #4B286D;
+      --telus-green-light: #E8F5E9;
       --warning-bg: #FFF9EE;
       --warning-text: #8C5415;
       --red-hypertension: #D32F2F;
@@ -39,9 +41,12 @@
       --cyan-anxiety: #00BCD4;
       --indigo-ptsd: #3F51B5;
       --gray-600: #4A5568;
+      --gray-400: #A0AEC0;
       --shadow-sm: 0 1px 3px rgba(0,0,0,0.08);
       --shadow-md: 0 4px 12px rgba(0,0,0,0.1);
       --familial-bg: #FEFCE8;
+      --circle-active-bg: #E8F5E9;
+      --circle-inactive-bg: #F1F3F5;
     }
 
     /* Layout */
@@ -214,6 +219,16 @@
       justify-content: space-between;
       align-items: flex-start;
     }
+    .patient-info {
+      flex: 1;
+    }
+    .patient-name-row {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin-bottom: 0.2rem;
+    }
     .patient-name {
       font-weight: 700;
       font-size: 1.1rem;
@@ -221,9 +236,53 @@
     .patient-dob {
       font-size: 0.75rem;
       color: var(--gray-600);
-      margin-left: 0.5rem;
+      margin-left: 0.25rem;
     }
-    /* Condition shapes: Physical = pill, Mental = hexagon via clip-path */
+    /* Circle of Care Icons */
+    .circle-icons {
+      display: flex;
+      gap: 0.4rem;
+      align-items: center;
+    }
+    .care-icon {
+      font-size: 0.7rem;
+      font-weight: 700;
+      padding: 0.2rem 0.45rem;
+      border-radius: 20px;
+      background: var(--circle-inactive-bg);
+      color: var(--gray-600);
+      letter-spacing: -0.2px;
+      transition: all 0.2s;
+    }
+    .care-icon.active {
+      background: var(--telus-green-light);
+      color: var(--telus-green);
+      border: 1px solid var(--telus-green);
+    }
+    .care-icon-tooltip {
+      position: relative;
+      cursor: help;
+    }
+    .care-icon-tooltip:hover:after {
+      content: attr(data-tooltip);
+      position: absolute;
+      bottom: 120%;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #1A202C;
+      color: white;
+      font-size: 0.65rem;
+      padding: 0.2rem 0.5rem;
+      border-radius: 8px;
+      white-space: nowrap;
+      z-index: 100;
+    }
+    .condition-pills {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.4rem;
+      margin: 0.5rem 0 0 0;
+    }
     .pill-condition {
       display: inline-block;
       padding: 0.2rem 0.8rem;
@@ -273,7 +332,7 @@
       font-weight: 700;
     }
 
-    /* Expanded Precision Path + Genetic Success Meter + Familial History */
+    /* Expanded Content */
     .expanded-content {
       padding: 0 1.2rem 1.2rem 1.2rem;
       border-top: 1px solid #EFF3F8;
@@ -320,7 +379,6 @@
       font-size: 0.8rem;
       margin-top: 0.5rem;
     }
-    /* Familial History Section — Optional, trauma-informed */
     .familial-section {
       background: var(--familial-bg);
       border-radius: 16px;
@@ -354,6 +412,15 @@
       padding: 0.2rem 0.5rem;
       border-radius: 20px;
       color: #4B5563;
+      display: inline-block;
+    }
+    .collaborative-hub-badge {
+      background: var(--telus-purple);
+      color: white;
+      font-size: 0.65rem;
+      padding: 0.2rem 0.6rem;
+      border-radius: 20px;
+      margin-left: 0.5rem;
       display: inline-block;
     }
 
@@ -430,14 +497,16 @@
       .fab-az { display: flex; }
       .dual-path { flex-direction: column; }
       .familial-item { flex-direction: column; gap: 0.2rem; }
+      .patient-name-row { flex-direction: column; align-items: flex-start; }
+      .circle-icons { margin-top: 0.25rem; }
     }
   </style>
 </head>
 <body>
 <div class="app">
   <div class="app-header">
-    <div class="logo"><h1>🧬 Evolutionary HEAL-V3</h1><p>Human-centric EMR · Ancestral Logic · Familial History · Precision Prevention</p></div>
-    <div class="global-search"><input type="text" id="globalSearch" placeholder="🔍 Regex search: Name, ID (e.g., Maria, P007)"></div>
+    <div class="logo"><h1>🧬 Evolutionary HEAL-V3</h1><p>Circle of Care · Collaborative CDSS · Familial History · Precision Prevention</p></div>
+    <div class="global-search"><input type="text" id="globalSearch" placeholder="🔍 Search by name, ID..."></div>
     <div class="live-clock" id="liveClock"></div>
   </div>
 
@@ -446,13 +515,15 @@
       <div class="filter-section"><h3>⏱️ 24h Recents</h3><label class="toggle-switch"><input type="checkbox" id="recentsToggle"> <span>Shift recency</span></label></div>
       <div class="filter-section"><h3>🏷️ Condition Legend</h3><div id="conditionFiltersContainer"></div></div>
       <div class="filter-section">
-        <h3>🧬 Precision Prevention</h3>
-        <p style="font-size:0.7rem;">Genetic Success Meter + Dual Path | Latitude Logic active</p>
+        <h3>🤝 Circle of Care</h3>
+        <p style="font-size:0.7rem;"><strong>[MD]</strong> Medical Doctor · <strong>[ND]</strong> Naturopathic Doctor<br>
+        <strong>[NP]</strong> Nurse Practitioner · <strong>[PharmD]</strong> Pharmacist<br>
+        <em>Highlighted = active in last 7 days</em></p>
       </div>
       <div class="disclaimer-banner">
         <strong>🔬 Forward-Looking Prototype</strong><br>
         Evolutionary HEAL-V3 is a speculative design concept exploring the future of integrated CDSS. Not a deployed clinical tool. Aligned with TELUS Health UDS, Joyce's Principle, and emerging PGx-EFAIR standards.<br><br>
-        <strong>👨‍👩‍👧‍👦 Familial History:</strong> Optional, patient-led, trauma-informed. Demonstrates intergenerational health patterns and cultural transmission.
+        <strong>👥 "This isn't just an EMR; it's a collaborative hub allowing the entire Circle of Care to monitor precision success metrics in real-time."</strong>
       </div>
     </div>
     <div class="patient-list-container"><div class="patient-grid" id="patientGrid"></div></div>
@@ -463,40 +534,49 @@
 
 <script>
   // ----------------------------------------------
-  // EVOLUTIONARY HEAL-V3: Familial History Integration
-  // Demonstrates intergenerational health patterns, cultural transmission, SDOH.
-  // Designed as optional, patient-led, trauma-informed disclosure.
+  // EVOLUTIONARY HEAL-V3: Circle of Care Integration
+  // MD, ND, NP, PharmD with active status indicators (last 7 days engagement)
+  // Collaborative hub for interdisciplinary precision health
   // ----------------------------------------------
   const patients = [
     { id: "P001", firstName: "Elena", lastName: "Martinez", dob: "1972-05-12", lastAccessed: new Date(Date.now() - 2*3600000), conditions: ["Hypertension", "Anxiety", "Diabetes"], soap: { S: true, O: true, A: false, P: false }, ancestryGroup: "Latino", latitude: 49.2,
       bioTx: { Hypertension: "Lisinopril 10mg", Anxiety: "SSRI (Sertraline)", Diabetes: "Metformin 500mg" },
-      ancestralTx: { Hypertension: "Hawthorn + hibiscus", Anxiety: "Ashwagandha, mindful breathing", Diabetes: "Berberine + nopal" },
+      ancestralTx: { Hypertension: "Hawthorn + hibiscus (NPN: 80012345)", Anxiety: "Ashwagandha (NPN: 80023456)", Diabetes: "Berberine (NPN: 80034567)" },
       insight: "Acculturation stress + limited access to traditional maize/bean staples.",
-      familial: { mother: "Hypertension (82)", father: "Diabetes (77)", siblings: ["Brother: Anxiety (45)"], culturalNote: "Traditional Mexican diet rich in nopal & amaranth — access limited due to food desert." } },
+      familial: { mother: "Hypertension (82)", father: "Diabetes (77)", siblings: ["Brother: Anxiety (45)"], culturalNote: "Traditional Mexican diet rich in nopal & amaranth — access limited due to food desert." },
+      circleOfCare: { MD: true, ND: true, NP: false, PharmD: true } },
     { id: "P002", firstName: "James", lastName: "Carter", dob: "1965-11-03", lastAccessed: new Date(Date.now() - 6*3600000), conditions: ["COPD", "PTSD"], soap: { S: true, O: true, A: true, P: false }, ancestryGroup: "African American", latitude: 43.7,
-      bioTx: { COPD: "Fluticasone/salmeterol", PTSD: "Prazosin" }, ancestralTx: { COPD: "Ivy leaf + mullein", PTSD: "Community talking circles + Omega-3" }, insight: "Housing quality + historical trauma affect respiratory & mental health.",
-      familial: { mother: "Asthma (70)", father: "PTSD (Veteran)", siblings: [], culturalNote: "Intergenerational trauma; community resilience practices." } },
+      bioTx: { COPD: "Fluticasone/salmeterol", PTSD: "Prazosin" }, ancestralTx: { COPD: "Ivy leaf extract (NPN: 80045678)", PTSD: "Omega-3 + Community circles" }, insight: "Housing quality + historical trauma affect respiratory & mental health.",
+      familial: { mother: "Asthma (70)", father: "PTSD (Veteran)", siblings: [], culturalNote: "Intergenerational trauma; community resilience practices." },
+      circleOfCare: { MD: true, ND: false, NP: true, PharmD: true } },
     { id: "P003", firstName: "Aisha", lastName: "Khan", dob: "1988-09-22", lastAccessed: new Date(Date.now() - 45*60000), conditions: ["Allergy", "Seasonal Depression"], soap: { S: true, O: false, A: false, P: false }, ancestryGroup: "South Asian", latitude: 51.0,
-      bioTx: { Allergy: "Cetirizine", SeasonalDepression: "Bupropion" }, ancestralTx: { Allergy: "Quercetin + butterbur", SeasonalDepression: "Light therapy + saffron" }, insight: "Latitude affects Vitamin D; traditional spices can support mood.",
-      familial: { mother: "Seasonal Depression", father: "Allergies", siblings: ["Sister: Anxiety"], culturalNote: "Dietary traditions include turmeric & black seed — protective but underutilized." } },
+      bioTx: { Allergy: "Cetirizine", SeasonalDepression: "Bupropion" }, ancestralTx: { Allergy: "Quercetin + butterbur (NPN: 80056789)", SeasonalDepression: "Saffron + Light therapy" }, insight: "Latitude affects Vitamin D; traditional spices can support mood.",
+      familial: { mother: "Seasonal Depression", father: "Allergies", siblings: ["Sister: Anxiety"], culturalNote: "Dietary traditions include turmeric & black seed — protective but underutilized." },
+      circleOfCare: { MD: true, ND: true, NP: false, PharmD: false } },
     { id: "P004", firstName: "Roberto", lastName: "Flores", dob: "1950-01-17", lastAccessed: new Date(Date.now() - 7.2*3600000), conditions: ["Diabetes", "Hypertension", "Obesity"], soap: { S: true, O: true, A: true, P: true }, ancestryGroup: "Latino", latitude: 45.5,
-      bioTx: { Diabetes: "Glipizide", Hypertension: "Losartan", Obesity: "Orlistat" }, ancestralTx: { Diabetes: "Fenugreek, amaranth", Hypertension: "Garlic + CoQ10", Obesity: "Dietary pattern shift to ancestral grains" }, insight: "Time poverty / food desert limits traditional low-glycemic foods.",
-      familial: { mother: "Diabetes (deceased 68)", father: "Hypertension (80)", siblings: ["Brother: Obesity, Diabetes"], culturalNote: "Traditional grains (kiwicha, quinoa) not available locally." } },
+      bioTx: { Diabetes: "Glipizide", Hypertension: "Losartan", Obesity: "Orlistat" }, ancestralTx: { Diabetes: "Fenugreek (NPN: 80067890)", Hypertension: "Garlic extract (NPN: 80078901)", Obesity: "Ancestral grains" }, insight: "Time poverty / food desert limits traditional low-glycemic foods.",
+      familial: { mother: "Diabetes (deceased 68)", father: "Hypertension (80)", siblings: ["Brother: Obesity, Diabetes"], culturalNote: "Traditional grains (kiwicha, quinoa) not available locally." },
+      circleOfCare: { MD: true, ND: false, NP: true, PharmD: true } },
     { id: "P005", firstName: "Susan", lastName: "Lee", dob: "1992-07-30", lastAccessed: new Date(Date.now() - 30*60000), conditions: ["Asthma", "Anxiety"], soap: { S: false, O: true, A: false, P: false }, ancestryGroup: "East Asian", latitude: 49.3,
       bioTx: { Asthma: "Montelukast", Anxiety: "Escitalopram" }, ancestralTx: { Asthma: "Acupuncture + magnolia", Anxiety: "GABA + meditation" }, insight: "Chemical exposure + intergenerational stress.",
-      familial: { mother: "Anxiety", father: "Asthma", siblings: [], culturalNote: "Korean herbal medicine covered by some plans." } },
+      familial: { mother: "Anxiety", father: "Asthma", siblings: [], culturalNote: "Korean herbal medicine covered by some plans." },
+      circleOfCare: { MD: true, ND: true, NP: false, PharmD: true } },
     { id: "P006", firstName: "David", lastName: "Kim", dob: "1982-02-14", lastAccessed: new Date(Date.now() - 11*3600000), conditions: ["Diabetes", "Major Depression"], soap: { S: true, O: true, A: true, P: false }, ancestryGroup: "Korean", latitude: 50.1,
-      bioTx: { Diabetes: "Empagliflozin", MajorDepression: "Venlafaxine" }, ancestralTx: { Diabetes: "Korean fermented kimchi + barley", MajorDepression: "St. John's Wort (light), ginseng" }, insight: "Food insecurity + stigma around mental health.",
-      familial: { mother: "Depression", father: "Diabetes (72)", siblings: [], culturalNote: "Stigma limits disclosure — trauma-informed design required." } },
+      bioTx: { Diabetes: "Empagliflozin", MajorDepression: "Venlafaxine" }, ancestralTx: { Diabetes: "Korean fermented kimchi + barley", MajorDepression: "Ginseng + St. John's Wort" }, insight: "Food insecurity + stigma around mental health.",
+      familial: { mother: "Depression", father: "Diabetes (72)", siblings: [], culturalNote: "Stigma limits disclosure — trauma-informed design required." },
+      circleOfCare: { MD: true, ND: false, NP: true, PharmD: true } },
     { id: "P007", firstName: "Maria", lastName: "Washington", dob: "1978-10-09", lastAccessed: new Date(Date.now() - 3*3600000), conditions: ["Hypertension", "PTSD"], soap: { S: true, O: true, A: false, P: false }, ancestryGroup: "African American", latitude: 41.8,
-      bioTx: { Hypertension: "Amlodipine", PTSD: "Sertraline" }, ancestralTx: { Hypertension: "Hibiscus, beetroot", PTSD: "Community resilience + narrative therapy" }, insight: "Structural inequities, acculturation stress.",
-      familial: { mother: "Hypertension (75)", father: "PTSD (Veteran)", siblings: [], culturalNote: "Community health workers bridge gap." } },
+      bioTx: { Hypertension: "Amlodipine", PTSD: "Sertraline" }, ancestralTx: { Hypertension: "Hibiscus tea (NPN: 80089012)", PTSD: "Community narrative therapy" }, insight: "Structural inequities, acculturation stress.",
+      familial: { mother: "Hypertension (75)", father: "PTSD (Veteran)", siblings: [], culturalNote: "Community health workers bridge gap." },
+      circleOfCare: { MD: true, ND: true, NP: true, PharmD: false } },
     { id: "P008", firstName: "William", lastName: "Cree", dob: "1960-06-25", lastAccessed: new Date(Date.now() - 19*3600000), conditions: ["Diabetes", "COPD", "Alcohol Use Disorder"], soap: { S: false, O: false, A: false, P: false }, ancestryGroup: "Indigenous", latitude: 53.5,
-      bioTx: { Diabetes: "Insulin", COPD: "Tiotropium", AlcoholUseDisorder: "Naltrexone" }, ancestralTx: { Diabetes: "Wild berries, traditional low-carb", COPD: "Steam + cedar infusion", AlcoholUseDisorder: "Land-based healing" }, insight: "Colonial trauma, food sovereignty needed.",
-      familial: { mother: "Diabetes", father: "COPD", siblings: ["Brother: Alcohol Use Disorder"], culturalNote: "Land-based healing preferred; intergenerational trauma." } },
+      bioTx: { Diabetes: "Insulin", COPD: "Tiotropium", AlcoholUseDisorder: "Naltrexone" }, ancestralTx: { Diabetes: "Wild berries", COPD: "Cedar infusion", AlcoholUseDisorder: "Land-based healing" }, insight: "Colonial trauma, food sovereignty needed.",
+      familial: { mother: "Diabetes", father: "COPD", siblings: ["Brother: Alcohol Use Disorder"], culturalNote: "Land-based healing preferred; intergenerational trauma." },
+      circleOfCare: { MD: true, ND: false, NP: false, PharmD: true } },
     { id: "P009", firstName: "Fatima", lastName: "Hassan", dob: "1995-03-12", lastAccessed: new Date(Date.now() - 2.2*3600000), conditions: ["Seasonal Depression", "Allergy"], soap: { S: true, O: true, A: false, P: false }, ancestryGroup: "Middle Eastern", latitude: 55.0,
-      bioTx: { SeasonalDepression: "Wellbutrin", Allergy: "Fexofenadine" }, ancestralTx: { SeasonalDepression: "Vitamin D3 high-dose, saffron", Allergy: "Black seed oil" }, insight: "High-latitude winters exacerbate deficiency.",
-      familial: { mother: "Seasonal Depression", father: "Allergies", siblings: [], culturalNote: "Saffron & black seed traditionally used — insurance coverage varies." } }
+      bioTx: { SeasonalDepression: "Wellbutrin", Allergy: "Fexofenadine" }, ancestralTx: { SeasonalDepression: "Vitamin D3 + Saffron", Allergy: "Black seed oil (NPN: 80090123)" }, insight: "High-latitude winters exacerbate deficiency.",
+      familial: { mother: "Seasonal Depression", father: "Allergies", siblings: [], culturalNote: "Saffron & black seed traditionally used — insurance coverage varies." },
+      circleOfCare: { MD: true, ND: true, NP: false, PharmD: true } }
   ];
 
   function getGeneticSuccessRate(ancestryGroup, condition) {
@@ -564,6 +644,14 @@
       const bioSuggest = p.bioTx[primaryCond] || "Standard protocol";
       const ancestralSuggest = p.ancestralTx[primaryCond] || "Ancestral botanical / lifestyle";
       
+      // Circle of Care Icons
+      const circleIcons = [
+        { type: "MD", label: "Medical Doctor" },
+        { type: "ND", label: "Naturopathic Doctor" },
+        { type: "NP", label: "Nurse Practitioner" },
+        { type: "PharmD", label: "Pharmacist" }
+      ].map(role => `<span class="care-icon ${p.circleOfCare?.[role.type] ? 'active' : ''} care-icon-tooltip" data-tooltip="${role.label}">[${role.type}]</span>`).join('');
+      
       let familialHtml = '';
       if (p.familial) {
         const fam = p.familial;
@@ -590,8 +678,14 @@
       return `
         <div class="card" data-id="${p.id}">
           <div class="card-header" data-id="${p.id}">
-            <div><span class="patient-name">${p.firstName} ${p.lastName}</span><span class="patient-dob">DOB: ${p.dob}</span>
-              <div style="margin-top:6px;">${condHtml}</div>
+            <div class="patient-info">
+              <div class="patient-name-row">
+                <span class="patient-name">${p.firstName} ${p.lastName}</span>
+                <span class="patient-dob">DOB: ${p.dob}</span>
+                <div class="circle-icons">${circleIcons}</div>
+                <span class="collaborative-hub-badge">Circle of Care</span>
+              </div>
+              <div class="condition-pills">${condHtml}</div>
             </div>
             <div class="soap-icons">${soapHtml}</div>
           </div>
@@ -606,8 +700,8 @@
                 <small>Simulated pharmacogenomic compatibility — forward-looking concept aligned with PGx-EFAIR.</small>
               </div>
               <div class="dual-path">
-                <div class="path-card bio-path"><strong>💊 Biomedical (Western)</strong><br>${bioSuggest}<br><small>Standard clinical protocol</small></div>
-                <div class="path-card ancestral-path"><strong>🌿 Ancestral / Naturopathic</strong><br>${ancestralSuggest}<br><small>Traditional wisdom, community-led</small></div>
+                <div class="path-card bio-path"><strong>💊 Biomedical (Western)</strong><br>${bioSuggest}<br><small>Standard clinical protocol · DIN licensed</small></div>
+                <div class="path-card ancestral-path"><strong>🌿 Ancestral / Naturopathic</strong><br>${ancestralSuggest}<br><small>Health Canada NPN licensed · Insurance eligible</small></div>
               </div>
               ${familialHtml}
               <div class="env-modifier"><strong>🍁 Canadian Environmental Modifier</strong><br>${latMessage}<br>📍 Latitude: ${p.latitude}°N</div>
