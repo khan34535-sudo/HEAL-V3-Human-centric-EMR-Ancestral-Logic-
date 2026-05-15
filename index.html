@@ -1,0 +1,687 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+  <title>Evolutionary HEAL-V3 | Familial History · Precision Prevention</title>
+  <style>
+    /* ============================================
+       TELUS HEALTH DESIGN SYSTEM + ACCESSIBILITY
+       Psychological rationale: High contrast reduces cognitive load.
+       Fitts's Law: Search bar centered, large tap targets.
+       Zeigarnik Effect: SOAP icons remain incomplete → prompts completion.
+       Familial History: Optional, patient-led, trauma-informed disclosure.
+    ============================================ */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      background: #F4F6FA;
+      font-family: 'Helvetica Neue', Helvetica, Arial, system-ui, -apple-system, sans-serif;
+      font-size: 16px;
+      line-height: 1.5;
+      color: #1A202C;
+    }
+
+    /* TELUS UDS Core Tokens */
+    :root {
+      --telus-white: #FFFFFF;
+      --telus-green: #2B8000;
+      --telus-purple: #4B286D;
+      --warning-bg: #FFF9EE;
+      --warning-text: #8C5415;
+      --red-hypertension: #D32F2F;
+      --yellow-diabetes: #FBC02D;
+      --silver-copd: #C0C0C0;
+      --cyan-anxiety: #00BCD4;
+      --indigo-ptsd: #3F51B5;
+      --gray-600: #4A5568;
+      --shadow-sm: 0 1px 3px rgba(0,0,0,0.08);
+      --shadow-md: 0 4px 12px rgba(0,0,0,0.1);
+      --familial-bg: #FEFCE8;
+    }
+
+    /* Layout */
+    .app {
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    /* Fixed Header — Fitts's Law: Search easily accessible */
+    .app-header {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      background: var(--telus-white);
+      border-bottom: 1px solid #E2E8F0;
+      padding: 0.75rem 1.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      flex-wrap: wrap;
+      z-index: 40;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .logo h1 {
+      font-size: 1.2rem;
+      font-weight: 700;
+      color: var(--telus-purple);
+    }
+    .logo p {
+      font-size: 0.7rem;
+      color: var(--gray-600);
+    }
+
+    .global-search {
+      flex: 1;
+      max-width: 420px;
+    }
+    .global-search input {
+      width: 100%;
+      padding: 0.6rem 1.2rem;
+      border: 1px solid #CBD5E0;
+      border-radius: 40px;
+      font-size: 1rem;
+      outline: none;
+      transition: 0.2s;
+    }
+    .global-search input:focus {
+      border-color: var(--telus-green);
+      box-shadow: 0 0 0 3px rgba(43,128,0,0.2);
+    }
+
+    .live-clock {
+      font-family: monospace;
+      font-size: 0.95rem;
+      font-weight: 500;
+      background: #EDF2F7;
+      padding: 0.4rem 1rem;
+      border-radius: 32px;
+    }
+
+    /* Main area */
+    .main-layout {
+      display: flex;
+      margin-top: 82px;
+      height: calc(100vh - 82px);
+      overflow: hidden;
+    }
+
+    /* Sidebar Navigation Trinity */
+    .sidebar {
+      width: 270px;
+      background: var(--telus-white);
+      border-right: 1px solid #E2E8F0;
+      padding: 1.5rem 1rem;
+      display: flex;
+      flex-direction: column;
+      gap: 2rem;
+      overflow-y: auto;
+      z-index: 20;
+    }
+
+    .filter-section h3 {
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--gray-600);
+      margin-bottom: 0.75rem;
+    }
+
+    .disclaimer-banner {
+      background: #F0F4FF;
+      border-left: 4px solid var(--telus-purple);
+      padding: 0.8rem;
+      border-radius: 12px;
+      font-size: 0.7rem;
+      margin-top: 1rem;
+    }
+
+    .toggle-switch {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      cursor: pointer;
+      font-size: 0.9rem;
+    }
+    .toggle-switch input {
+      width: 18px;
+      height: 18px;
+      accent-color: var(--telus-green);
+    }
+
+    .condition-legend-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 0.7rem;
+      font-size: 0.85rem;
+    }
+    .legend-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .legend-shape {
+      width: 24px;
+      height: 24px;
+      border-radius: 32px;
+    }
+    .legend-shape.hex {
+      clip-path: polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%);
+      border-radius: 0;
+    }
+
+    /* Patient grid */
+    .patient-list-container {
+      flex: 1;
+      overflow-y: auto;
+      padding: 1.5rem;
+      background: #F8FAFE;
+    }
+    .patient-grid {
+      max-width: 1100px;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      gap: 1.2rem;
+    }
+
+    /* Behavioral Card */
+    .card {
+      background: var(--telus-white);
+      border-radius: 20px;
+      box-shadow: var(--shadow-sm);
+      transition: all 0.2s ease;
+      border: 1px solid #E9EEF5;
+    }
+    .card:hover {
+      box-shadow: var(--shadow-md);
+    }
+
+    .card-header {
+      padding: 1rem 1.2rem;
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+    }
+    .patient-name {
+      font-weight: 700;
+      font-size: 1.1rem;
+    }
+    .patient-dob {
+      font-size: 0.75rem;
+      color: var(--gray-600);
+      margin-left: 0.5rem;
+    }
+    /* Condition shapes: Physical = pill, Mental = hexagon via clip-path */
+    .pill-condition {
+      display: inline-block;
+      padding: 0.2rem 0.8rem;
+      border-radius: 32px;
+      font-size: 0.7rem;
+      font-weight: 600;
+      margin-right: 0.4rem;
+      margin-bottom: 0.3rem;
+    }
+    .hex-condition {
+      display: inline-block;
+      padding: 0.2rem 0.9rem;
+      clip-path: polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%);
+      font-size: 0.7rem;
+      font-weight: 600;
+      margin-right: 0.4rem;
+      margin-bottom: 0.3rem;
+      background: #00BCD4;
+      color: black;
+    }
+    .soap-icons {
+      display: flex;
+      gap: 0.6rem;
+      font-weight: bold;
+      font-size: 0.9rem;
+    }
+    .soap-icon {
+      opacity: 0.35;
+    }
+    .soap-icon.filled {
+      opacity: 1;
+      color: var(--telus-green);
+    }
+
+    .card-footer {
+      padding: 0.7rem 1.2rem;
+      border-top: 1px solid #EDF2F7;
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.8rem;
+    }
+    .warning-card {
+      background: var(--warning-bg);
+    }
+    .warning-badge {
+      color: var(--warning-text);
+      font-weight: 700;
+    }
+
+    /* Expanded Precision Path + Genetic Success Meter + Familial History */
+    .expanded-content {
+      padding: 0 1.2rem 1.2rem 1.2rem;
+      border-top: 1px solid #EFF3F8;
+    }
+    .genetic-meter {
+      background: linear-gradient(135deg, #F0F4FF, #FFFFFF);
+      border-radius: 16px;
+      padding: 0.8rem;
+      margin: 0.8rem 0;
+      border: 1px solid #D9E2EF;
+    }
+    .meter-bar {
+      height: 10px;
+      background: #E2E8F0;
+      border-radius: 12px;
+      overflow: hidden;
+      margin: 0.5rem 0;
+    }
+    .meter-fill {
+      width: 0%;
+      height: 100%;
+      background: var(--telus-green);
+      border-radius: 12px;
+    }
+    .dual-path {
+      display: flex;
+      gap: 1rem;
+      flex-wrap: wrap;
+      margin: 1rem 0;
+    }
+    .path-card {
+      flex: 1;
+      background: #FAFCFE;
+      border-radius: 14px;
+      padding: 0.8rem;
+      border-left: 4px solid;
+    }
+    .bio-path { border-left-color: #0284C7; background: #F0F9FF; }
+    .ancestral-path { border-left-color: #2B8000; background: #F2FDF5; }
+    .env-modifier {
+      background: #FFF8E7;
+      padding: 0.6rem;
+      border-radius: 12px;
+      font-size: 0.8rem;
+      margin-top: 0.5rem;
+    }
+    /* Familial History Section — Optional, trauma-informed */
+    .familial-section {
+      background: var(--familial-bg);
+      border-radius: 16px;
+      padding: 0.8rem;
+      margin: 0.8rem 0;
+      border: 1px dashed #D4C4A8;
+    }
+    .familial-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      cursor: pointer;
+      font-weight: 600;
+      color: #7C6B3C;
+    }
+    .familial-content {
+      margin-top: 0.6rem;
+      font-size: 0.8rem;
+      padding-left: 0.5rem;
+      border-left: 2px solid var(--telus-green);
+    }
+    .familial-item {
+      margin: 0.4rem 0;
+      display: flex;
+      gap: 0.8rem;
+      flex-wrap: wrap;
+    }
+    .opt-out-badge {
+      font-size: 0.7rem;
+      background: #F3F4F6;
+      padding: 0.2rem 0.5rem;
+      border-radius: 20px;
+      color: #4B5563;
+      display: inline-block;
+    }
+
+    /* A-Z Scrub Desktop */
+    .az-scrub-desktop {
+      position: sticky;
+      top: 110px;
+      width: 44px;
+      background: rgba(255,255,255,0.96);
+      border-radius: 40px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      font-size: 0.7rem;
+      font-weight: 600;
+      padding: 0.6rem 0;
+      margin-right: 1rem;
+      border: 1px solid #DFE6EF;
+      height: fit-content;
+    }
+    .az-letter {
+      cursor: pointer;
+      padding: 0.2rem 0;
+      width: 100%;
+      text-align: center;
+    }
+    .az-letter:hover { background: var(--telus-green); color: white; border-radius: 30px; }
+
+    /* Mobile FAB */
+    .fab-az {
+      display: none;
+      position: fixed;
+      bottom: 1.5rem;
+      right: 1.5rem;
+      background: var(--telus-purple);
+      color: white;
+      width: 56px;
+      height: 56px;
+      border-radius: 28px;
+      align-items: center;
+      justify-content: center;
+      z-index: 45;
+      cursor: pointer;
+      font-size: 1.3rem;
+      border: none;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+    }
+    .modal-az {
+      display: none;
+      position: fixed;
+      bottom: 85px;
+      right: 1rem;
+      background: white;
+      border-radius: 24px;
+      padding: 1rem;
+      width: 210px;
+      grid-template-columns: repeat(5,1fr);
+      gap: 0.5rem;
+      z-index: 50;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+    }
+    .modal-az.active { display: grid; }
+    .modal-letter {
+      text-align: center;
+      padding: 0.5rem;
+      background: #EDF2F7;
+      border-radius: 24px;
+      cursor: pointer;
+    }
+
+    @media (max-width: 768px) {
+      .sidebar { display: none; }
+      .az-scrub-desktop { display: none; }
+      .fab-az { display: flex; }
+      .dual-path { flex-direction: column; }
+      .familial-item { flex-direction: column; gap: 0.2rem; }
+    }
+  </style>
+</head>
+<body>
+<div class="app">
+  <div class="app-header">
+    <div class="logo"><h1>🧬 Evolutionary HEAL-V3</h1><p>Human-centric EMR · Ancestral Logic · Familial History · Precision Prevention</p></div>
+    <div class="global-search"><input type="text" id="globalSearch" placeholder="🔍 Regex search: Name, ID (e.g., Maria, P007)"></div>
+    <div class="live-clock" id="liveClock"></div>
+  </div>
+
+  <div class="main-layout">
+    <div class="sidebar">
+      <div class="filter-section"><h3>⏱️ 24h Recents</h3><label class="toggle-switch"><input type="checkbox" id="recentsToggle"> <span>Shift recency</span></label></div>
+      <div class="filter-section"><h3>🏷️ Condition Legend</h3><div id="conditionFiltersContainer"></div></div>
+      <div class="filter-section">
+        <h3>🧬 Precision Prevention</h3>
+        <p style="font-size:0.7rem;">Genetic Success Meter + Dual Path | Latitude Logic active</p>
+      </div>
+      <div class="disclaimer-banner">
+        <strong>🔬 Forward-Looking Prototype</strong><br>
+        Evolutionary HEAL-V3 is a speculative design concept exploring the future of integrated CDSS. Not a deployed clinical tool. Aligned with TELUS Health UDS, Joyce's Principle, and emerging PGx-EFAIR standards.<br><br>
+        <strong>👨‍👩‍👧‍👦 Familial History:</strong> Optional, patient-led, trauma-informed. Demonstrates intergenerational health patterns and cultural transmission.
+      </div>
+    </div>
+    <div class="patient-list-container"><div class="patient-grid" id="patientGrid"></div></div>
+    <div class="az-scrub-desktop" id="azScrubDesktop"></div>
+  </div>
+  <div class="fab-az" id="fabAz">A–Z</div><div class="modal-az" id="modalAz"></div>
+</div>
+
+<script>
+  // ----------------------------------------------
+  // EVOLUTIONARY HEAL-V3: Familial History Integration
+  // Demonstrates intergenerational health patterns, cultural transmission, SDOH.
+  // Designed as optional, patient-led, trauma-informed disclosure.
+  // ----------------------------------------------
+  const patients = [
+    { id: "P001", firstName: "Elena", lastName: "Martinez", dob: "1972-05-12", lastAccessed: new Date(Date.now() - 2*3600000), conditions: ["Hypertension", "Anxiety", "Diabetes"], soap: { S: true, O: true, A: false, P: false }, ancestryGroup: "Latino", latitude: 49.2,
+      bioTx: { Hypertension: "Lisinopril 10mg", Anxiety: "SSRI (Sertraline)", Diabetes: "Metformin 500mg" },
+      ancestralTx: { Hypertension: "Hawthorn + hibiscus", Anxiety: "Ashwagandha, mindful breathing", Diabetes: "Berberine + nopal" },
+      insight: "Acculturation stress + limited access to traditional maize/bean staples.",
+      familial: { mother: "Hypertension (82)", father: "Diabetes (77)", siblings: ["Brother: Anxiety (45)"], culturalNote: "Traditional Mexican diet rich in nopal & amaranth — access limited due to food desert." } },
+    { id: "P002", firstName: "James", lastName: "Carter", dob: "1965-11-03", lastAccessed: new Date(Date.now() - 6*3600000), conditions: ["COPD", "PTSD"], soap: { S: true, O: true, A: true, P: false }, ancestryGroup: "African American", latitude: 43.7,
+      bioTx: { COPD: "Fluticasone/salmeterol", PTSD: "Prazosin" }, ancestralTx: { COPD: "Ivy leaf + mullein", PTSD: "Community talking circles + Omega-3" }, insight: "Housing quality + historical trauma affect respiratory & mental health.",
+      familial: { mother: "Asthma (70)", father: "PTSD (Veteran)", siblings: [], culturalNote: "Intergenerational trauma; community resilience practices." } },
+    { id: "P003", firstName: "Aisha", lastName: "Khan", dob: "1988-09-22", lastAccessed: new Date(Date.now() - 45*60000), conditions: ["Allergy", "Seasonal Depression"], soap: { S: true, O: false, A: false, P: false }, ancestryGroup: "South Asian", latitude: 51.0,
+      bioTx: { Allergy: "Cetirizine", SeasonalDepression: "Bupropion" }, ancestralTx: { Allergy: "Quercetin + butterbur", SeasonalDepression: "Light therapy + saffron" }, insight: "Latitude affects Vitamin D; traditional spices can support mood.",
+      familial: { mother: "Seasonal Depression", father: "Allergies", siblings: ["Sister: Anxiety"], culturalNote: "Dietary traditions include turmeric & black seed — protective but underutilized." } },
+    { id: "P004", firstName: "Roberto", lastName: "Flores", dob: "1950-01-17", lastAccessed: new Date(Date.now() - 7.2*3600000), conditions: ["Diabetes", "Hypertension", "Obesity"], soap: { S: true, O: true, A: true, P: true }, ancestryGroup: "Latino", latitude: 45.5,
+      bioTx: { Diabetes: "Glipizide", Hypertension: "Losartan", Obesity: "Orlistat" }, ancestralTx: { Diabetes: "Fenugreek, amaranth", Hypertension: "Garlic + CoQ10", Obesity: "Dietary pattern shift to ancestral grains" }, insight: "Time poverty / food desert limits traditional low-glycemic foods.",
+      familial: { mother: "Diabetes (deceased 68)", father: "Hypertension (80)", siblings: ["Brother: Obesity, Diabetes"], culturalNote: "Traditional grains (kiwicha, quinoa) not available locally." } },
+    { id: "P005", firstName: "Susan", lastName: "Lee", dob: "1992-07-30", lastAccessed: new Date(Date.now() - 30*60000), conditions: ["Asthma", "Anxiety"], soap: { S: false, O: true, A: false, P: false }, ancestryGroup: "East Asian", latitude: 49.3,
+      bioTx: { Asthma: "Montelukast", Anxiety: "Escitalopram" }, ancestralTx: { Asthma: "Acupuncture + magnolia", Anxiety: "GABA + meditation" }, insight: "Chemical exposure + intergenerational stress.",
+      familial: { mother: "Anxiety", father: "Asthma", siblings: [], culturalNote: "Korean herbal medicine covered by some plans." } },
+    { id: "P006", firstName: "David", lastName: "Kim", dob: "1982-02-14", lastAccessed: new Date(Date.now() - 11*3600000), conditions: ["Diabetes", "Major Depression"], soap: { S: true, O: true, A: true, P: false }, ancestryGroup: "Korean", latitude: 50.1,
+      bioTx: { Diabetes: "Empagliflozin", MajorDepression: "Venlafaxine" }, ancestralTx: { Diabetes: "Korean fermented kimchi + barley", MajorDepression: "St. John's Wort (light), ginseng" }, insight: "Food insecurity + stigma around mental health.",
+      familial: { mother: "Depression", father: "Diabetes (72)", siblings: [], culturalNote: "Stigma limits disclosure — trauma-informed design required." } },
+    { id: "P007", firstName: "Maria", lastName: "Washington", dob: "1978-10-09", lastAccessed: new Date(Date.now() - 3*3600000), conditions: ["Hypertension", "PTSD"], soap: { S: true, O: true, A: false, P: false }, ancestryGroup: "African American", latitude: 41.8,
+      bioTx: { Hypertension: "Amlodipine", PTSD: "Sertraline" }, ancestralTx: { Hypertension: "Hibiscus, beetroot", PTSD: "Community resilience + narrative therapy" }, insight: "Structural inequities, acculturation stress.",
+      familial: { mother: "Hypertension (75)", father: "PTSD (Veteran)", siblings: [], culturalNote: "Community health workers bridge gap." } },
+    { id: "P008", firstName: "William", lastName: "Cree", dob: "1960-06-25", lastAccessed: new Date(Date.now() - 19*3600000), conditions: ["Diabetes", "COPD", "Alcohol Use Disorder"], soap: { S: false, O: false, A: false, P: false }, ancestryGroup: "Indigenous", latitude: 53.5,
+      bioTx: { Diabetes: "Insulin", COPD: "Tiotropium", AlcoholUseDisorder: "Naltrexone" }, ancestralTx: { Diabetes: "Wild berries, traditional low-carb", COPD: "Steam + cedar infusion", AlcoholUseDisorder: "Land-based healing" }, insight: "Colonial trauma, food sovereignty needed.",
+      familial: { mother: "Diabetes", father: "COPD", siblings: ["Brother: Alcohol Use Disorder"], culturalNote: "Land-based healing preferred; intergenerational trauma." } },
+    { id: "P009", firstName: "Fatima", lastName: "Hassan", dob: "1995-03-12", lastAccessed: new Date(Date.now() - 2.2*3600000), conditions: ["Seasonal Depression", "Allergy"], soap: { S: true, O: true, A: false, P: false }, ancestryGroup: "Middle Eastern", latitude: 55.0,
+      bioTx: { SeasonalDepression: "Wellbutrin", Allergy: "Fexofenadine" }, ancestralTx: { SeasonalDepression: "Vitamin D3 high-dose, saffron", Allergy: "Black seed oil" }, insight: "High-latitude winters exacerbate deficiency.",
+      familial: { mother: "Seasonal Depression", father: "Allergies", siblings: [], culturalNote: "Saffron & black seed traditionally used — insurance coverage varies." } }
+  ];
+
+  function getGeneticSuccessRate(ancestryGroup, condition) {
+    const base = { Latino: 72, AfricanAmerican: 68, SouthAsian: 70, EastAsian: 74, Korean: 73, Indigenous: 65, MiddleEastern: 71 };
+    let rate = base[ancestryGroup] || 68;
+    if (condition === "Diabetes") rate += 5;
+    if (condition === "Anxiety" || condition === "Seasonal Depression") rate += 3;
+    return Math.min(rate, 96);
+  }
+
+  function getLatitudeModifier(lat) {
+    if (lat > 50) return "⚠️ High latitude: Vitamin D deficiency risk Nov–Mar. Supplement 1000-2000 IU recommended.";
+    if (lat > 43) return "🌤️ Moderate latitude: consider D3 600-1000 IU during winter.";
+    return "☀️ Lower latitude: seasonal monitoring sufficient.";
+  }
+
+  function getConditionShapeClass(cond) {
+    const mental = ["Anxiety", "PTSD", "Major Depression", "Seasonal Depression", "Alcohol Use Disorder"];
+    return mental.includes(cond) ? "hex-condition" : "pill-condition";
+  }
+  function getConditionColor(cond) {
+    const map = { Hypertension: "#D32F2F", Diabetes: "#FBC02D", COPD: "#C0C0C0", Asthma: "#C0C0C0", Obesity: "#FBC02D", Allergy: "#FF00FF",
+                  Anxiety: "#00BCD4", PTSD: "#3F51B5", MajorDepression: "#00BCD4", SeasonalDepression: "#00BCD4", AlcoholUseDisorder: "#3F51B5" };
+    return map[cond] || "#9E9E9E";
+  }
+
+  let recentsOnly = false, selectedConditions = new Set(), searchQuery = "", expandedMap = new Map();
+  let expandedFamilialMap = new Map();
+
+  function getTimeAgo(date) {
+    const delta = Date.now() - date.getTime();
+    if (delta < 60000) return "Just now";
+    if (delta < 3600000) return `${Math.floor(delta/60000)} mins ago`;
+    if (delta < 86400000) return `${Math.floor(delta/3600000)} hours ago`;
+    return `${Math.floor(delta/86400000)} days ago`;
+  }
+
+  function renderCards() {
+    let filtered = patients.filter(p => {
+      if (recentsOnly && (Date.now() - p.lastAccessed.getTime()) > 86400000) return false;
+      if (selectedConditions.size && !p.conditions.some(c => selectedConditions.has(c))) return false;
+      if (searchQuery.trim()) {
+        const q = searchQuery.trim().toLowerCase();
+        const fullName = `${p.firstName} ${p.lastName} ${p.id}`.toLowerCase();
+        if (!fullName.includes(q)) return false;
+      }
+      return true;
+    });
+    const grid = document.getElementById("patientGrid");
+    if (!filtered.length) { grid.innerHTML = "<div style='padding:2rem;text-align:center;'>✨ No patients match filters</div>"; return; }
+    grid.innerHTML = filtered.map(p => {
+      const timeAgo = getTimeAgo(p.lastAccessed);
+      const isWarning = (Date.now() - p.lastAccessed.getTime()) > 4*3600000;
+      const expanded = expandedMap.get(p.id) || false;
+      const familialExpanded = expandedFamilialMap.get(p.id) || false;
+      const soapHtml = ["S","O","A","P"].map(k => `<span class="soap-icon ${p.soap[k] ? 'filled' : ''}">${k}</span>`).join("");
+      const condHtml = p.conditions.map(c => {
+        const shapeClass = getConditionShapeClass(c);
+        const bgColor = getConditionColor(c);
+        return `<span class="${shapeClass}" style="background:${bgColor}; color:${bgColor === '#FBC02D' ? 'black' : 'white'};">${c}</span>`;
+      }).join("");
+      const primaryCond = p.conditions[0];
+      const successRate = getGeneticSuccessRate(p.ancestryGroup, primaryCond);
+      const latMessage = getLatitudeModifier(p.latitude);
+      const bioSuggest = p.bioTx[primaryCond] || "Standard protocol";
+      const ancestralSuggest = p.ancestralTx[primaryCond] || "Ancestral botanical / lifestyle";
+      
+      let familialHtml = '';
+      if (p.familial) {
+        const fam = p.familial;
+        familialHtml = `
+          <div class="familial-section">
+            <div class="familial-header" data-familial-toggle="${p.id}">
+              <span>👨‍👩‍👧‍👦 FAMILIAL HISTORY (Optional — patient-led disclosure)</span>
+              <span>${familialExpanded ? '▼' : '▶'}</span>
+            </div>
+            ${familialExpanded ? `
+              <div class="familial-content">
+                <div class="familial-item"><strong>Mother:</strong> ${fam.mother || 'Not disclosed'}</div>
+                <div class="familial-item"><strong>Father:</strong> ${fam.father || 'Not disclosed'}</div>
+                <div class="familial-item"><strong>Siblings:</strong> ${fam.siblings?.join(', ') || 'None disclosed'}</div>
+                <div class="familial-item"><strong>🌾 Cultural / Traditional Context:</strong> ${fam.culturalNote || 'Patient may share more with cultural safety'}</div>
+                <div><span class="opt-out-badge">⚪ Patient can opt out or modify at any time — trauma-informed design</span></div>
+                <div style="font-size:0.7rem; margin-top:6px;"><em>Intergenerational patterns detected: ${p.conditions[0]} present in family history.</em></div>
+              </div>
+            ` : ''}
+          </div>
+        `;
+      }
+      
+      return `
+        <div class="card" data-id="${p.id}">
+          <div class="card-header" data-id="${p.id}">
+            <div><span class="patient-name">${p.firstName} ${p.lastName}</span><span class="patient-dob">DOB: ${p.dob}</span>
+              <div style="margin-top:6px;">${condHtml}</div>
+            </div>
+            <div class="soap-icons">${soapHtml}</div>
+          </div>
+          <div class="card-footer ${isWarning ? 'warning-card' : ''}">
+            <span>🕒 ${timeAgo} ${isWarning ? '• <span class="warning-badge">⚠️ NEEDS CHECK-IN</span>' : ''}</span>
+            <span class="expand-link" data-id="${p.id}" style="color:#2B8000; font-weight:500;">${expanded ? '▼ Collapse' : '▶ Expand'}</span>
+          </div>
+          ${expanded ? `
+            <div class="expanded-content">
+              <div class="genetic-meter"><strong>🧬 Precision Prevention: Genetic Success Meter</strong><br>Ancestry: ${p.ancestryGroup} | Predicted response to ${primaryCond} treatment: <strong>${successRate}%</strong>
+                <div class="meter-bar"><div class="meter-fill" style="width:${successRate}%;"></div></div>
+                <small>Simulated pharmacogenomic compatibility — forward-looking concept aligned with PGx-EFAIR.</small>
+              </div>
+              <div class="dual-path">
+                <div class="path-card bio-path"><strong>💊 Biomedical (Western)</strong><br>${bioSuggest}<br><small>Standard clinical protocol</small></div>
+                <div class="path-card ancestral-path"><strong>🌿 Ancestral / Naturopathic</strong><br>${ancestralSuggest}<br><small>Traditional wisdom, community-led</small></div>
+              </div>
+              ${familialHtml}
+              <div class="env-modifier"><strong>🍁 Canadian Environmental Modifier</strong><br>${latMessage}<br>📍 Latitude: ${p.latitude}°N</div>
+              <div class="ethnographic-tooltip" style="background:#F9F5FF; border-radius:12px; padding:0.6rem; margin-top:0.8rem; font-size:0.8rem;">
+                <strong>🌍 Ethnographic Root-Cause</strong><br>${p.insight}
+                <hr style="margin:6px 0"><em>${p.conditions.some(c=>["Anxiety","PTSD","Depression"].includes(c)) ? "🧠 Mental health: Acculturation stress + systemic barriers." : "🏠 Community-led recovery shows improved resilience."}</em>
+              </div>
+            </div>
+          ` : ''}
+        </div>
+      `;
+    }).join('');
+    
+    document.querySelectorAll('.card-header, .expand-link').forEach(el => {
+      el.addEventListener('click', (e) => { 
+        const id = el.getAttribute('data-id'); 
+        if(id){ 
+          expandedMap.set(id, !expandedMap.get(id)); 
+          renderCards(); 
+          renderAZScrub(); 
+        } 
+        e.stopPropagation(); 
+      });
+    });
+    document.querySelectorAll('[data-familial-toggle]').forEach(el => {
+      el.addEventListener('click', (e) => {
+        const id = el.getAttribute('data-familial-toggle');
+        if(id){
+          expandedFamilialMap.set(id, !expandedFamilialMap.get(id));
+          renderCards();
+        }
+        e.stopPropagation();
+      });
+    });
+  }
+
+  function renderAZScrub() {
+    const letters = "#ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
+    const desktop = document.getElementById("azScrubDesktop");
+    if(desktop){
+      desktop.innerHTML = letters.map(l=>`<div class="az-letter" data-letter="${l}">${l}</div>`).join('');
+      desktop.querySelectorAll('.az-letter').forEach(btn=>btn.addEventListener('click',()=>scrollToLetter(btn.dataset.letter)));
+    }
+    const modal = document.getElementById("modalAz");
+    if(modal){
+      modal.innerHTML = letters.map(l=>`<div class="modal-letter" data-letter="${l}">${l}</div>`).join('');
+      modal.querySelectorAll('.modal-letter').forEach(btn=>btn.addEventListener('click',()=>{ scrollToLetter(btn.dataset.letter); modal.classList.remove('active'); }));
+    }
+  }
+  
+  function scrollToLetter(letter){
+    let filtered = patients;
+    if(recentsOnly) filtered = filtered.filter(p=>(Date.now()-p.lastAccessed.getTime())<=86400000);
+    if(selectedConditions.size) filtered=filtered.filter(p=>p.conditions.some(c=>selectedConditions.has(c)));
+    if(searchQuery.trim()){ const q=searchQuery.trim().toLowerCase(); filtered=filtered.filter(p=>`${p.firstName} ${p.lastName}`.toLowerCase().includes(q)); }
+    let target = (letter==='#') ? filtered.find(p=>!isNaN(p.firstName[0])) : filtered.find(p=>p.lastName.toUpperCase().startsWith(letter) || p.firstName.toUpperCase().startsWith(letter));
+    if(target){ const card=document.querySelector(`.card[data-id="${target.id}"]`); if(card) card.scrollIntoView({behavior:'smooth', block:'center'}); }
+  }
+  
+  function updateClock(){ document.getElementById("liveClock").innerText = new Date().toLocaleString(); }
+  
+  function bindFilters(){
+    document.getElementById("recentsToggle").addEventListener("change",e=>{ recentsOnly=e.target.checked; renderCards(); renderAZScrub(); });
+    document.getElementById("globalSearch").addEventListener("input",e=>{ searchQuery=e.target.value; renderCards(); renderAZScrub(); });
+    const allConds = [...new Set(patients.flatMap(p=>p.conditions))];
+    const container=document.getElementById("conditionFiltersContainer");
+    container.innerHTML=allConds.map(c=>`<div class="condition-legend-item"><div class="legend-badge"><span class="legend-shape ${getConditionShapeClass(c)}" style="background:${getConditionColor(c)};"></span>${c}</div><input type="checkbox" data-cond="${c}" id="chk_${c}"></div>`).join('');
+    document.querySelectorAll('[data-cond]').forEach(cb=>cb.addEventListener('change',e=>{ let cond=e.target.dataset.cond; if(e.target.checked) selectedConditions.add(cond); else selectedConditions.delete(cond); renderCards(); renderAZScrub(); }));
+  }
+  
+  document.getElementById("fabAz")?.addEventListener("click",()=>document.getElementById("modalAz").classList.toggle("active"));
+  document.addEventListener('click',(e)=>{ let modal=document.getElementById("modalAz"),fab=document.getElementById("fabAz"); if(modal?.classList.contains('active') && !modal.contains(e.target) && !fab.contains(e.target)) modal.classList.remove('active'); });
+  
+  setInterval(updateClock,1000); bindFilters(); renderCards(); renderAZScrub(); updateClock();
+</script>
+</body>
+</html>
